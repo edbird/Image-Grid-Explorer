@@ -21,7 +21,7 @@
 
 
 // TODO: check that images are addressed in sequential order starting from zero with no gaps
-
+// TODO: change window title depending on address
 
 
 int main()
@@ -45,10 +45,12 @@ int main()
             return -2;
         }
 
+        // get window size
         int size_x{640};
         int size_y{480};
         p.SetWindowSize(size_x, size_y);
 
+        // create window
         SDL_Window *window{SDL_CreateWindow("Image Grid Explorer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, size_x, size_y, SDL_WINDOW_SHOWN)};
         if(window == nullptr)
         {
@@ -56,19 +58,17 @@ int main()
             return -3;
         }
 
+        // get dimension
         int dimension{0};
         p.SetDimension(dimension);
         if(dimension < 1)
         {
             return -5;
         }
-        std::vector<int> address;
-        std::vector<int> address_prev;
-        for(int c{0}; c < dimension; ++ c)
-        {
-            address.push_back(0);
-        }
+        Address address(dimension);
+        Address address_prev(address);
 
+        // load initial image
         std::cout << "loading initial image" << std::endl;
         SDL_Surface *screen_surface;
         screen_surface = SDL_GetWindowSurface(window);
@@ -87,8 +87,6 @@ int main()
             // TODO: use error output class
         }
         
-        address_prev = address;
-        
         SDL_BlitSurface(image_surface, nullptr, screen_surface, nullptr);
         SDL_UpdateWindowSurface(window);
 
@@ -105,7 +103,7 @@ int main()
             }
             if(address != address_prev)
             {
-                for(std::map<std::string, std::vector<int>>::const_iterator it{p.ImageIndex().begin()};
+                for(std::map<std::string, Address>::const_iterator it{p.ImageIndex().begin()};
                     it != p.ImageIndex().end(); ++ it)
                 {
                     if(it->second == address)
@@ -138,137 +136,105 @@ int main()
                 else if(event.type == SDL_KEYDOWN)
                 {
 
-                    int dimension_index{0};
+                    SDL_Keycode keycode{event.key.keysym.sym};
+                    SDL_Keymod keymod{SDL_GetModState()};
 
-                    switch(event.key.keysym.sym)
+                    if(keycode == SDLK_q && ((keymod & KMOD_LCTRL) > 0))
                     {
-                        case SDLK_z:
+                        quit = true;
+                    }
+                    else if(keycode == SDLK_z || keycode == SDLK_x)
+                    {
+                        int dimension_index = 0;
 
-                            dimension_index = 0;
-                            if(dimension >= 1)
+                        if(keycode == SDLK_z)
+                        {
+                            if(address.Dimension() >= 1)
                             {
-                                if(address.at(dimension_index) > 0)
+                                if(address.At(dimension_index) > 0)
                                 {
-                                    -- address.at(dimension_index);
+                                    address.Decr(dimension_index);
                                 }
                             }
+                        }
 
-                            std::cout << "Address: ";
-                            for(int c{0}; c < dimension; ++ c)
+                        if(keycode == SDLK_x)
+                        {
+                            if(address.Dimension() >= 1)
                             {
-                                std::cout << address.at(c) << " ";
-                            }
-                            std::cout << std::endl;
-
-                            break;
-
-
-                        case SDLK_x:
-
-                            dimension_index = 0;
-                            if(dimension >= 1)
-                            {
-                                if(address.at(dimension_index) < 2) // TODO:
+                                if(address.At(dimension_index) < 2) // TODO:
                                 {
-                                    ++ address.at(dimension_index);
+                                    address.Incr(dimension_index);
                                 }
                             }
+                        }
 
-                            std::cout << "Address: ";
-                            for(int c{0}; c < dimension; ++ c)
-                            {
-                                std::cout << address.at(c) << " ";
-                            }
-                            std::cout << std::endl;
-
-                            break;
-
-                        
-                        case SDLK_a:
-
-                            dimension_index = 1;
-                            if(dimension >= 2)
-                            {
-                                if(address.at(dimension_index) > 0)
-                                {
-                                    -- address.at(dimension_index);
-                                }
-                            }
-
-                            std::cout << "Address: ";
-                            for(int c{0}; c < dimension; ++ c)
-                            {
-                                std::cout << address.at(c) << " ";
-                            }
-                            std::cout << std::endl;
-
-                            break;
-
-
-                        case SDLK_s:
-
-                            dimension_index = 1;
-                            if(dimension >= 2)
-                            {
-                                if(address.at(dimension_index) < 2) // TODO:
-                                {
-                                    ++ address.at(dimension_index);
-                                }
-                            }
-
-                            std::cout << "Address: ";
-                            for(int c{0}; c < dimension; ++ c)
-                            {
-                                std::cout << address.at(c) << " ";
-                            }
-                            std::cout << std::endl;
-
-                            break;
-
-                        
-                        case SDLK_q:
-
-                            dimension_index = 2;
-                            if(dimension >= 3)
-                            {
-                                if(address.at(dimension_index) > 0)
-                                {
-                                    -- address.at(dimension_index);
-                                }
-                            }
-
-                            std::cout << "Address: ";
-                            for(int c{0}; c < dimension; ++ c)
-                            {
-                                std::cout << address.at(c) << " ";
-                            }
-                            std::cout << std::endl;
-
-                            break;
-
-
-                        case SDLK_w:
-
-                            dimension_index = 2;
-                            if(dimension >= 3)
-                            {
-                                if(address.at(dimension_index) < 2) // TODO:
-                                {
-                                    ++ address.at(dimension_index);
-                                }
-                            }
-
-                            std::cout << "Address: ";
-                            for(int c{0}; c < dimension; ++ c)
-                            {
-                                std::cout << address.at(c) << " ";
-                            }
-                            std::cout << std::endl;
-
-                            break;
-
+                        std::cout << "Address: " << address << std::endl;
 
                     }
+                    else if(keycode == SDLK_a || keycode == SDLK_s)
+                    {
+                        int dimension_index = 1;
+
+                        if(keycode == SDLK_a)
+                        {
+                            if(address.Dimension() >= 2)
+                            {
+                                if(address.At(dimension_index) > 0)
+                                {
+                                    address.Decr(dimension_index);
+                                }
+                            }
+                        }
+
+                        if(keycode == SDLK_s)
+                        {
+                            if(address.Dimension() >= 2)
+                            {
+                                if(address.At(dimension_index) < 2) // TODO:
+                                {
+                                    address.Incr(dimension_index);
+                                }
+                            }
+                        }
+
+                        std::cout << "Address: " << address << std::endl;
+
+                    }
+                    else if(keycode == SDLK_q || keycode == SDLK_w)
+                    {
+                        int dimension_index = 2;
+
+                        if(keycode == SDLK_q)
+                        {
+                            if(address.Dimension() >= 3)
+                            {
+                                if(address.At(dimension_index) > 0)
+                                {
+                                    address.Decr(dimension_index);
+                                }
+                            }
+                        }
+
+                        if(keycode == SDLK_w)
+                        {
+                            if(address.Dimension() >= 3)
+                            {
+                                if(address.At(dimension_index) < 2) // TODO:
+                                {
+                                    address.Incr(dimension_index);
+                                }
+                            }
+                        }
+
+                        std::cout << "Address: " << address << std::endl;
+
+                    }
+                    else
+                    {
+
+                    }
+
 
                 }
             }

@@ -2,6 +2,11 @@
 #define INDEX_FILE_PROCESSOR_HPP
 
 
+// local headers
+#include "Address.hpp"
+#include "ErrorLog.hpp"
+
+
 // C++ headers
 #include <iostream>
 #include <fstream>
@@ -138,8 +143,10 @@ class IndexFileProcessor
 
                                 if(image_address.size() == dimension)
                                 {
+                                    Address image_address_2(dimension);
+                                    image_address_2.SetAddress(image_address);
                                     // TODO: check on return value for success
-                                    image_index.insert({instruction, image_address});
+                                    image_index.insert({instruction, image_address_2});
                                 }
                                 else
                                 {
@@ -169,7 +176,7 @@ class IndexFileProcessor
         return ok;
     }
 
-    const std::map<std::string, std::vector<int>>& ImageIndex()
+    const std::map<std::string, Address>& ImageIndex()
     {
         return image_index;
     }
@@ -208,7 +215,7 @@ class IndexFileProcessor
     // properties
     int dimension;
     bool dimension_set;
-    std::map<std::string, std::vector<int>> image_index;
+    std::map<std::string, Address> image_index;
     std::vector<std::string> keymap_instructions;
     int window_size_x;
     bool window_size_x_set;
