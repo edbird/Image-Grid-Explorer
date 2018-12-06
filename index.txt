@@ -1,0 +1,21 @@
+# imagegrid explorer
+# index.txt
+dimension=3
+img_0_0_0.bmp 0 0 0
+img_0_0_1.bmp 0 0 1
+img_0_0_2.bmp 0 0 2
+img_0_1_0.bmp 0 1 0
+img_0_1_1.bmp 0 1 1
+img_0_1_2.bmp 0 1 2
+img_1_0_0.bmp 1 0 0
+# this dimension is not completed
+# maintain an index for "target" which cannot be always be realized (like the textbox)
+# use defined controls
+keymap q dimension 0 dec
+keymap w dimension 0 inc
+keymap a dimension 1 dec
+keymap s dimension 1 inc
+keymap z dimension 2 dec
+keymap x dimension 2 inc
+# window dimensions
+window 800 600
