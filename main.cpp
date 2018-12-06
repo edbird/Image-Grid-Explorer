@@ -1,7 +1,11 @@
 
-// local headers
+// local headers, internal
 #include "IndexFileProcessor.hpp"
 #include "ErrorLog.hpp"
+
+
+// local headers, external
+#include "program_arguments.hpp"
 
 
 // SDL headers
@@ -24,13 +28,67 @@
 // TODO: change window title depending on address
 
 
-int main()
+void print_arg_help(std::ostream& os)
+{
+    os << "Image Grid Explorer\n"\
+       << "\n"\
+       << "Arguments:\n"\
+       << "\n"\
+       << "     --help\n"\
+       << " Print help\n"\
+       //<< "     --filename [FILENAME] [DIM1] <DIM2> <DIM3>\n"
+       //<< " Generate index.txt file"
+       << "     --generate [DIM1] <DIM2> <DIM3>\n"\
+       << " Generate index.txt file with dimensions DIM1 DIM2 DIM3\n"\
+       << "";
+}
+
+
+int main(int argc, char* argv[])
 {
 
 
+    ////////////////////////////////////////////////////////////////////////////
+    // PROCESS PROGRAM ARGUMENTS
+    ////////////////////////////////////////////////////////////////////////////
+
+    // new program arguments processing method
+    ProgramArguments pa;
+    pa.Add("help", "--help", "false");
+    //pa.Add("filename", "--filename", "index.txt");
+    pa.Add("generate", "--generate", "1");
+    pa.Print();
+    pa.Process(argc, argv);
+
+    if(pa.Get("help") != std::string("false"))
+    {
+        print_arg_help(std::cout);
+    }
+
+    if(pa.WasProvided("generate"))
+    {
+        std::string dimensions_string{pa.Get("generate")};
+        std::vector<int> dimensions;
+        std::size_t search_ix{0};
+        std::size_t next_search_ix{0};
+
+        while((next_search_ix = dimensions_string.find(" ", search_ix)) != std::string::npos)
+        {
+            std::cout << "..." << std::endl;
+            std::cout << next_search_ix << std::endl;
+            std::cout << search_ix << std::endl;
+            std::string next_dimension_string{dimensions_string.substr(search_ix, next_search_ix - search_ix)};
+            std::cout << next_dimension_string << std::endl;
+            dimensions.push_back(std::stoi(next_dimension_string));
+            search_ix = next_search_ix;
+        }
+    }
+
+    // init error log
     ErrorLog errorlog("error.log");
 
 
+    // process index.txt file
     IndexFileProcessor p("index.txt", errorlog);
     if(!p.Ok())
     {
@@ -39,16 +97,19 @@ int main()
     else
     {
 
+        // init SDL
         if(SDL_Init(SDL_INIT_VIDEO) < 0)
         {
             std::cout << "SDL_Init failure" << SDL_GetError() << std::endl;
             return -2;
         }
 
+
         // get window size
         int size_x{640};
         int size_y{480};
         p.SetWindowSize(size_x, size_y);
+
 
         // create window
         SDL_Window *window{SDL_CreateWindow("Image Grid Explorer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, size_x, size_y, SDL_WINDOW_SHOWN)};
@@ -57,6 +118,7 @@ int main()
             std::cout << "SDL_CreateWindow failure: " << SDL_GetError() << std::endl;
             return -3;
         }
+
 
         // get dimension
         int dimension{0};
@@ -68,12 +130,14 @@ int main()
         Address address(dimension);
         Address address_prev(address);
 
+
         // load initial image
         std::cout << "loading initial image" << std::endl;
         SDL_Surface *screen_surface;
         screen_surface = SDL_GetWindowSurface(window);
         SDL_Surface *image_surface;
             
+
         // blit image to screen
         if(p.ImageIndex().size() < 1)
         {
@@ -90,6 +154,8 @@ int main()
         SDL_BlitSurface(image_surface, nullptr, screen_surface, nullptr);
         SDL_UpdateWindowSurface(window);
 
+
+        // main loop
 
         bool quit{false};
         SDL_Event event;
@@ -126,6 +192,8 @@ int main()
             SDL_BlitSurface(image_surface, nullptr, screen_surface, nullptr);
             SDL_UpdateWindowSurface(window);
             
+
+            // process events
         
             while(SDL_PollEvent(&event) != 0)
             {
@@ -239,6 +307,9 @@ int main()
                 }
             }
         }
+
+
+        // clean
 
         SDL_DestroyWindow(window);
 
